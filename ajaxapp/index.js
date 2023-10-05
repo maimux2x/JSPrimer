@@ -1,32 +1,30 @@
-console.log("index.js: loaded");
-console.log("index.js: Hiii!!");
-console.log("index.js: Hello!!");
-
-// CSSセレクタを使ってDOMツリー中のh2要素を取得する
-const heading = document.querySelector("h2");
-// h2要素に含まれるテキストコンテンツを取得する
-const headingText = heading.textContent;
-
-// button要素を作成する
-const button = document.createElement("button");
-button.textContent = "Push Me";
-// body要素の子要素としてbuttonを挿入する
-document.body.appendChild(button);
-console.log(headingText);
-
-button.onclick = ((e) => console.log(e.target.textContent));
-
-const userId = "maimux2x";
-fetch(`https://api.github.com/users/${encodeURIComponent(userId)}`)
-    .then(response => {
-        console.log(response.status); // => 200
-        return response.json().then(userInfo => {
-            // JSONパースされたオブジェクトが渡される
-            console.log(userInfo); // => {...}
+function fetchUserInfo(userId) {
+    fetch(`https://api.github.com/users/${encodeURIComponent(userId)}`)
+        .then(response => {
+            console.log(response.status);
+            // エラーレスポンスが返されたことを検知する
+            if (!response.ok) {
+                console.error("エラーレスポンス", response);
+            } else {
+                return response.json().then(userInfo => {
+                    console.log(userInfo);
+                });
+            }
+        }).catch(error => {
+            console.error(error);
         });
-    }, e => e).catch((e) => e)
+}
 
-    // fetchを実行するとPromiseが帰ってくる
-    // resolveはthenに結果が渡る
-    // {login: 'maimux2x', id: 76797372, node_id: 'MDQ6VXNlcjc2Nzk3Mzcy', avatar_url: 'https://avatars.githubusercontent.com/u/76797372?v=4', gravatar_id: '', …}
-    
+const view = `
+<h4>${userInfo.name} (@${userInfo.login})</h4>
+<img src="${userInfo.avatar_url}" alt="${userInfo.login}" height="100">
+<dl>
+    <dt>Location</dt>
+    <dd>${userInfo.location}</dd>
+    <dt>Repositories</dt>
+    <dd>${userInfo.public_repos}</dd>
+</dl>
+`;
+
+const result = document.getElementById("result");
+result.innerHTML = view;
