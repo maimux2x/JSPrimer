@@ -1,29 +1,43 @@
-function fetchUserInfo(userId) {
-    fetch(`https://api.github.com/users/${encodeURIComponent(userId)}`)
-        .then(response => {
-            if (!response.ok) {
-                console.error("エラーレスポンス", response);
-            } else {
-                return response.json().then(userInfo => {
-                    // HTMLの組み立て
-                    const view = escapeHTML`
-                    <h4>${userInfo.name} (@${userInfo.login})</h4>
-                    <img src="${userInfo.avatar_url}" alt="${userInfo.login}" height="100">
-                    <dl>
-                        <dt>Location</dt>
-                        <dd>${userInfo.location}</dd>
-                        <dt>Repositories</dt>
-                        <dd>${userInfo.public_repos}</dd>
-                    </dl>
-                    `;
-                    // HTMLの挿入
-                    const result = document.getElementById("result");
-                    result.innerHTML = view;
-                });
-            }
-        }).catch(error => {
-            console.error(error);
-        });
+async function main() {
+    try {
+        const userId = getUserId();
+        const userInfo = await fetchUserInfo(userId);
+        const view = createView(userInfo);
+        displayView(view);
+    } catch (error) {
+        console.error(`エラーが発生しました (${error})`);
+    }
+}
+
+async function fetchUserInfo(userId) {
+    const response = await fetch(`https://api.github.com/users/${encodeURIComponent(userId)}`);
+    if (!response.ok) {
+        return Promise.reject(new Error(`${response.status}: ${response.statusText}`));
+    } else {
+        return response.json();
+    }
+}
+
+function getUserId() {
+    return document.getElementById("userId").value;
+}
+
+function createView(userInfo) {
+    return escapeHTML`
+    <h4>${userInfo.name} (@${userInfo.login})</h4>
+    <img src="${userInfo.avatar_url}" alt="${userInfo.login}" height="100">
+    <dl>
+        <dt>Location</dt>
+        <dd>${userInfo.location}</dd>
+        <dt>Repositories</dt>
+        <dd>${userInfo.public_repos}</dd>
+    </dl>
+    `;
+}
+
+function displayView(view) {
+    const result = document.getElementById("result");
+    result.innerHTML = view;
 }
 
 function escapeSpecialChars(str) {
@@ -38,12 +52,9 @@ function escapeSpecialChars(str) {
 function escapeHTML(strings, ...values) {
     return strings.reduce((result, str, i) => {
         const value = values[i - 1];
-        console.log(str);
         if (typeof value === "string") {
-            // console.log(result, value);
             return result + escapeSpecialChars(value) + str;
         } else {
-            console.log(result, value);
             return result + String(value) + str;
         }
     });
